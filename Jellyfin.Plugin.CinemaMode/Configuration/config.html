@@ -81,11 +81,36 @@
                         </div>
                     </fieldset>
 
-                    <!-- Trailers -->
+                    <!-- Trailers - MODIFIED SECTION -->
                     <fieldset class="verticalSection verticalSection-extrabottompadding">
                         <legend>
                             <h3 class="sectionTitle">Trailers</h3>
                         </legend>
+                        
+                        <!-- NEW: Custom Trailer Library Option -->
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label>
+                                <input is="emby-checkbox" type="checkbox" id="use-custom-trailer-library" name="use-custom-trailer-library" />
+                                <span>Use Custom Trailer Library</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Use a separate library for trailers instead of local trailers stored with movies
+                            </div>
+                        </div>
+                        
+                        <div class="selectContainer selectLibrary flex-shrink-zero" id="custom-trailer-library-container" style="display:none;"> 
+                            <label class="selectLabel" for="customTrailerLibrarySelect">Custom Trailer Library</label>
+                            <select is="emby-select" class="emby-select-withcolor emby-select" label="" id="customTrailerLibrarySelect">
+                            </select> 
+                            <div class="selectArrowContainer">
+                                <div style="visibility:hidden;display:none;">0</div>
+                                <span class="selectArrow material-icons keyboard_arrow_down" aria-hidden="true"></span>
+                            </div>
+                            <div class="fieldDescription">
+                                Select the library containing your trailers. This allows you to keep trailers separate from your movie collection.
+                            </div>
+                        </div>
+                        
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="number-trailers">Number of Trailers</label>
                             <input type="number" id="number-trailers" name="number-trailers" is="emby-input"/>
@@ -468,11 +493,22 @@
                     selector.value = optionValue;
                 });
             };
+            
+            // NEW: Toggle custom trailer library selector
+            function toggleCustomTrailerLibrary(show) {
+                var container = document.getElementById('custom-trailer-library-container');
+                if (show) {
+                    container.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                }
+            }
 
             $('.cinemaModeConfigurationPage').on('pageshow', function () {
                 Dashboard.showLoadingMsg();
                 clearList('trailerPreRollLibrarySelect');
                 clearList('featurePreRollLibrarySelect');
+                clearList('customTrailerLibrarySelect'); // NEW
                 clearList('trailer-pre-roll-rules');
                 clearList('feature-pre-roll-rules');
                 clearList('trailer-rules');
@@ -481,8 +517,15 @@
                 ApiClient.getPluginConfiguration(pluginId).then(function (config) {
                     $('#number-trailers', page).val(config.NumberOfTrailers);
                     document.getElementById('enforce-rating-limit-trailers').checked = config.EnforceRatingLimitTrailers;
+                    
+                    // NEW: Initialize custom trailer library settings
+                    document.getElementById('use-custom-trailer-library').checked = config.UseCustomTrailerLibrary || false;
+                    toggleCustomTrailerLibrary(config.UseCustomTrailerLibrary || false);
+                    
                     initLibrarySelector('trailerPreRollLibrarySelect', config.TrailerPreRollsLibrary, config.TrailerPreRollsLibrary);
                     initLibrarySelector('featurePreRollLibrarySelect', config.FeaturePreRollsLibrary, config.FeaturePreRollsLibrary);
+                    initLibrarySelector('customTrailerLibrarySelect', config.CustomTrailerLibrary, config.CustomTrailerLibrary || "-"); // NEW
+                    
                     initPreRollRules('trailer-pre-roll-rules', config.TrailerPreRollsSelections);
                     initPreRollRules('feature-pre-roll-rules', config.FeaturePreRollsSelections);
 
@@ -497,6 +540,13 @@
                     Dashboard.hideLoadingMsg();
                 });
             });
+            
+            // NEW: Handle checkbox change
+            document.addEventListener('change', function(e) {
+                if (e.target && e.target.id === 'use-custom-trailer-library') {
+                    toggleCustomTrailerLibrary(e.target.checked);
+                }
+            });
 
             $('.cinemaModeConfigurationPage').on('submit', function () {
                 Dashboard.showLoadingMsg();
@@ -504,10 +554,20 @@
                 var TrailerPreRollsLibrary = $('#trailerPreRollLibrarySelect').val();
                 var FeaturePreRollsLibrary = $('#featurePreRollLibrarySelect').val();
                 var NumberOfTrailers = $('#number-trailers').val();
+                
+                // NEW: Get custom trailer library settings
+                var UseCustomTrailerLibrary = document.getElementById('use-custom-trailer-library').checked;
+                var CustomTrailerLibrary = $('#customTrailerLibrarySelect').val();
+                
                 ApiClient.getPluginConfiguration(pluginId).then(function (config) {
 
                     config.TrailerPreRollsLibrary = TrailerPreRollsLibrary;
                     config.FeaturePreRollsLibrary = FeaturePreRollsLibrary;
+                    
+                    // NEW: Save custom trailer library settings
+                    config.UseCustomTrailerLibrary = UseCustomTrailerLibrary;
+                    config.CustomTrailerLibrary = CustomTrailerLibrary;
+                    
                     config.TrailerPreRollsSelections = getPreRollRules('trailer-pre-roll-rules');
                     config.FeaturePreRollsSelections = getPreRollRules('feature-pre-roll-rules');
                     config.TrailerPreRollsRatingLimit = document.getElementById('enforce-rating-limit-trailer-pre-rolls').checked;

@@ -17,6 +17,28 @@ namespace Jellyfin.Plugin.CinemaMode.Configuration
         {
             Name = false;
             Year = false;
+// File: Jellyfin.Plugin.CinemaMode/Configuration/PluginConfiguration.cs
+// MODIFIED VERSION - Adds custom trailer library support
+
+using System.Collections.Generic;
+using MediaBrowser.Model.Plugins;
+
+namespace Jellyfin.Plugin.CinemaMode.Configuration
+{
+    public class PreRollSelectionConfig
+    {
+        public bool Name { get; set; }
+        public bool Year { get; set; }
+        public bool Decade { get; set; }
+        public bool Seasonal { get; set; }
+        public bool Genre { get; set; }
+        public bool Studios { get; set; }
+        public bool AllTags { get; set; }
+
+        public PreRollSelectionConfig()
+        {
+            Name = false;
+            Year = false;
             Decade = false;
             Seasonal = false;
             Genre = false;
@@ -61,6 +83,10 @@ namespace Jellyfin.Plugin.CinemaMode.Configuration
 
     public class PluginConfiguration : BasePluginConfiguration
     {
+        // ADD THIS NEW PROPERTY FOR CUSTOM TRAILER LIBRARY
+        public string CustomTrailerLibrary { get; set; }
+        public bool UseCustomTrailerLibrary { get; set; }
+        
         public string TrailerPreRollsLibrary { get; set; }
         public string FeaturePreRollsLibrary { get; set; }
         public List<PreRollSelectionConfig> FeaturePreRollsSelections { get; set; }
@@ -77,6 +103,10 @@ namespace Jellyfin.Plugin.CinemaMode.Configuration
 
         public PluginConfiguration()
         {
+            // INITIALIZE NEW PROPERTIES
+            CustomTrailerLibrary = "-";
+            UseCustomTrailerLibrary = false;
+            
             TrailerPreRollsLibrary = "-";
             FeaturePreRollsLibrary = "-";
             TrailerPreRollsSelections = new List<PreRollSelectionConfig>();
